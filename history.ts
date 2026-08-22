@@ -1,25 +1,37 @@
-const canvas = document.getElementById('canvas');
-const overlay = document.getElementById('overlay');
-const ctx = canvas.getContext('2d');
+function getEl<T extends HTMLElement>(id: string): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing element #${id}`);
+  return el as T;
+}
 
-const statusSize = document.getElementById('status-size');
-const resizePreview = document.getElementById('resize-preview');
-const handleE = document.getElementById('handle-e');
-const handleS = document.getElementById('handle-s');
-const handleSE = document.getElementById('handle-se');
-const canvasWInput = document.getElementById('canvas-w');
-const canvasHInput = document.getElementById('canvas-h');
+const canvas = getEl<HTMLCanvasElement>('canvas');
+const overlay = getEl<HTMLCanvasElement>('overlay');
+const ctx = canvas.getContext('2d')!;
+
+const statusSize = getEl<HTMLElement>('status-size');
+const resizePreview = getEl<HTMLElement>('resize-preview');
+const handleE = getEl<HTMLElement>('handle-e');
+const handleS = getEl<HTMLElement>('handle-s');
+const handleSE = getEl<HTMLElement>('handle-se');
+const canvasWInput = getEl<HTMLInputElement>('canvas-w');
+const canvasHInput = getEl<HTMLInputElement>('canvas-h');
 
 const MIN_CANVAS_SIZE = 10;
 const MAX_CANVAS_SIZE = 4000;
 const CANVAS_OFFSET = 20; // matches #canvas/#overlay top/left in style.css
 
 // ---------- history (undo/redo) ----------
-const undoStack = [];
-const redoStack = [];
+interface HistoryEntry {
+  imageData: ImageData;
+  width: number;
+  height: number;
+}
+
+const undoStack: HistoryEntry[] = [];
+const redoStack: HistoryEntry[] = [];
 const MAX_HISTORY = 30;
 
-function snapshot() {
+function snapshot(): HistoryEntry {
   return {
     imageData: ctx.getImageData(0, 0, canvas.width, canvas.height),
     width: canvas.width,
@@ -27,7 +39,7 @@ function snapshot() {
   };
 }
 
-function restore(entry) {
+function restore(entry: HistoryEntry): void {
   if (canvas.width !== entry.width || canvas.height !== entry.height) {
     resizeCanvases(entry.width, entry.height);
   }
@@ -35,26 +47,28 @@ function restore(entry) {
   updateSizeUI();
 }
 
-export function pushHistory() {
+export function pushHistory(): void {
   undoStack.push(snapshot());
   if (undoStack.length > MAX_HISTORY) undoStack.shift();
   redoStack.length = 0;
 }
 
-export function undo() {
-  if (undoStack.length === 0) return;
+export function undo(): void {
+  const entry = undoStack.pop();
+  if (!entry) return;
   redoStack.push(snapshot());
-  restore(undoStack.pop());
+  restore(entry);
 }
 
-export function redo() {
-  if (redoStack.length === 0) return;
+export function redo(): void {
+  const entry = redoStack.pop();
+  if (!entry) return;
   undoStack.push(snapshot());
-  restore(redoStack.pop());
+  restore(entry);
 }
 
-document.getElementById('btn-undo').addEventListener('click', undo);
-document.getElementById('btn-redo').addEventListener('click', redo);
+getEl<HTMLButtonElement>('btn-undo').addEventListener('click', undo);
+getEl<HTMLButtonElement>('btn-redo').addEventListener('click', redo);
 
 window.addEventListener('keydown', (e) => {
   const ctrl = e.ctrlKey || e.metaKey;
@@ -63,19 +77,19 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ---------- canvas init ----------
-export function fillWhite() {
+export function fillWhite(): void {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function updateSizeUI() {
+function updateSizeUI(): void {
   statusSize.textContent = `${canvas.width} × ${canvas.height}`;
-  canvasWInput.value = canvas.width;
-  canvasHInput.value = canvas.height;
+  canvasWInput.value = String(canvas.width);
+  canvasHInput.value = String(canvas.height);
   positionHandles();
 }
 
-function positionHandles() {
+function positionHandles(): void {
   const w = canvas.width, h = canvas.height;
   handleE.style.left = `${CANVAS_OFFSET + w}px`;
   handleE.style.top = `${CANVAS_OFFSET}px`;
@@ -93,18 +107,18 @@ fillWhite();
 updateSizeUI();
 
 // ---------- resizing ----------
-function resizeCanvases(w, h) {
+function resizeCanvases(w: number, h: number): void {
   canvas.width = w;
   canvas.height = h;
   overlay.width = w;
   overlay.height = h;
 }
 
-function clampSize(v) {
+function clampSize(v: number): number {
   return Math.max(MIN_CANVAS_SIZE, Math.min(MAX_CANVAS_SIZE, Math.round(v)));
 }
 
-function performResize(newW, newH) {
+function performResize(newW: number, newH: number): void {
   newW = clampSize(newW);
   newH = clampSize(newH);
   if (newW === canvas.width && newH === canvas.height) return;
@@ -117,10 +131,11 @@ function performResize(newW, newH) {
   updateSizeUI();
 }
 
-let resizeDir = null;
+type ResizeDir = 'e' | 's' | 'se';
+let resizeDir: ResizeDir | null = null;
 let dragStartClientX = 0, dragStartClientY = 0, dragStartW = 0, dragStartH = 0;
 
-function computeDragSize(e) {
+function computeDragSize(e: MouseEvent): { w: number; h: number } {
   const dx = e.clientX - dragStartClientX;
   const dy = e.clientY - dragStartClientY;
   let w = dragStartW, h = dragStartH;
@@ -129,13 +144,13 @@ function computeDragSize(e) {
   return { w: clampSize(w), h: clampSize(h) };
 }
 
-function onResizeDragMove(e) {
+function onResizeDragMove(e: MouseEvent): void {
   const { w, h } = computeDragSize(e);
   resizePreview.style.width = `${w}px`;
   resizePreview.style.height = `${h}px`;
 }
 
-function onResizeDragEnd(e) {
+function onResizeDragEnd(e: MouseEvent): void {
   const { w, h } = computeDragSize(e);
   resizePreview.style.display = 'none';
   document.removeEventListener('mousemove', onResizeDragMove);
@@ -147,7 +162,7 @@ function onResizeDragEnd(e) {
 [handleE, handleS, handleSE].forEach((handle) => {
   handle.addEventListener('mousedown', (e) => {
     e.preventDefault();
-    resizeDir = handle.dataset.dir;
+    resizeDir = handle.dataset.dir as ResizeDir;
     dragStartClientX = e.clientX;
     dragStartClientY = e.clientY;
     dragStartW = canvas.width;
@@ -162,6 +177,6 @@ function onResizeDragEnd(e) {
   });
 });
 
-document.getElementById('btn-resize').addEventListener('click', () => {
+getEl<HTMLButtonElement>('btn-resize').addEventListener('click', () => {
   performResize(Number(canvasWInput.value), Number(canvasHInput.value));
 });

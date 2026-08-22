@@ -3,26 +3,33 @@ import {
   getPos, clearOverlay, strokeStyleFor, setupStroke,
   hexToRgba, floodFill, drawShape, placeText, pickColor
 } from './drawing.js';
+import { SHAPE_TOOLS, type Tool } from './types.js';
 
-const canvas = document.getElementById('canvas');
-const overlay = document.getElementById('overlay');
-const ctx = canvas.getContext('2d');
-const octx = overlay.getContext('2d');
+function getEl<T extends HTMLElement>(id: string): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing element #${id}`);
+  return el as T;
+}
 
-const sizeInput = document.getElementById('size');
-const sizeVal = document.getElementById('size-val');
-const fontsizeOpt = document.getElementById('fontsize-opt');
-const fontsizeInput = document.getElementById('fontsize');
-const fontsizeVal = document.getElementById('fontsize-val');
+const canvas = getEl<HTMLCanvasElement>('canvas');
+const overlay = getEl<HTMLCanvasElement>('overlay');
+const ctx = canvas.getContext('2d')!;
+const octx = overlay.getContext('2d')!;
 
-const primaryColor = document.getElementById('color-primary');
-const secondaryColor = document.getElementById('color-secondary');
-const swatchesEl = document.getElementById('swatches');
+const sizeInput = getEl<HTMLInputElement>('size');
+const sizeVal = getEl<HTMLElement>('size-val');
+const fontsizeOpt = getEl<HTMLElement>('fontsize-opt');
+const fontsizeInput = getEl<HTMLInputElement>('fontsize');
+const fontsizeVal = getEl<HTMLElement>('fontsize-val');
 
-const statusTool = document.getElementById('status-tool');
-const statusPos = document.getElementById('status-pos');
+const primaryColor = getEl<HTMLInputElement>('color-primary');
+const secondaryColor = getEl<HTMLInputElement>('color-secondary');
+const swatchesEl = getEl<HTMLElement>('swatches');
 
-const TOOL_LABELS = {
+const statusTool = getEl<HTMLElement>('status-tool');
+const statusPos = getEl<HTMLElement>('status-pos');
+
+const TOOL_LABELS: Record<Tool, string> = {
   pencil: 'Pencil', brush: 'Brush', eraser: 'Eraser', fill: 'Fill',
   eyedropper: 'Color Picker', line: 'Line', rect: 'Rectangle',
   'rect-fill': 'Filled Rectangle', ellipse: 'Ellipse',
@@ -36,16 +43,16 @@ const PALETTE = [
   '#ffff80', '#00ff80', '#80ffff', '#8080ff', '#ff0080', '#ff8040'
 ];
 
-let currentTool = 'pencil';
+let currentTool: Tool = 'pencil';
 let drawing = false;
 let startX = 0, startY = 0;
 
 // ---------- toolbar wiring ----------
-document.querySelectorAll('.tool-btn').forEach((btn) => {
+document.querySelectorAll<HTMLButtonElement>('.tool-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tool-btn').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
-    currentTool = btn.dataset.tool;
+    currentTool = btn.dataset.tool as Tool;
     statusTool.textContent = TOOL_LABELS[currentTool];
     fontsizeOpt.hidden = currentTool !== 'text';
     overlay.style.cursor = currentTool === 'eyedropper' ? 'copy' : 'crosshair';
@@ -71,13 +78,13 @@ PALETTE.forEach((color) => {
   swatchesEl.appendChild(sw);
 });
 
-document.getElementById('btn-new').addEventListener('click', () => {
+getEl<HTMLButtonElement>('btn-new').addEventListener('click', () => {
   if (!confirm('Start a new canvas? Unsaved work will be lost.')) return;
   pushHistory();
   fillWhite();
 });
 
-document.getElementById('btn-save').addEventListener('click', () => {
+getEl<HTMLButtonElement>('btn-save').addEventListener('click', () => {
   const link = document.createElement('a');
   link.download = `sketch-${Date.now()}.png`;
   link.href = canvas.toDataURL('image/png');
@@ -125,19 +132,19 @@ overlay.addEventListener('mousemove', (e) => {
   if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
     ctx.lineTo(x, y);
     ctx.stroke();
-  } else if (['line', 'rect', 'rect-fill', 'ellipse', 'ellipse-fill'].includes(currentTool)) {
+  } else if (SHAPE_TOOLS.includes(currentTool)) {
     clearOverlay();
     setupStroke(octx, e.buttons === 2 ? 2 : 1);
     drawShape(octx, currentTool, startX, startY, x, y);
   }
 });
 
-function endStroke(e) {
+function endStroke(e: MouseEvent): void {
   if (!drawing) return;
   drawing = false;
-  const { x, y } = getPos(e);
 
-  if (['line', 'rect', 'rect-fill', 'ellipse', 'ellipse-fill'].includes(currentTool)) {
+  if (SHAPE_TOOLS.includes(currentTool)) {
+    const { x, y } = getPos(e);
     clearOverlay();
     setupStroke(ctx, e.button);
     drawShape(ctx, currentTool, startX, startY, x, y);
@@ -154,7 +161,7 @@ overlay.addEventListener('mouseleave', () => {
 overlay.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // ---------- touch support ----------
-function touchToMouseEvent(touch, type) {
+function touchToMouseEvent(touch: Touch, type: string): MouseEvent {
   return new MouseEvent(type, {
     clientX: touch.clientX,
     clientY: touch.clientY,

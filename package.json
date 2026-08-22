@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@eslint/css": "^1.4.0",
@@ -16,6 +17,7 @@
     "@eslint/markdown": "^8.0.3",
     "eslint": "^10.9.0",
     "globals": "^17.11.0",
+    "typescript": "^7.0.2",
     "vite": "^7.1.0"
   },
   "allowScripts": {

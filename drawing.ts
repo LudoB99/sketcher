@@ -1,17 +1,26 @@
 import { pushHistory } from './history.js';
+import type { Tool } from './types.js';
 
-const canvas = document.getElementById('canvas');
-const overlay = document.getElementById('overlay');
-const ctx = canvas.getContext('2d');
-const octx = overlay.getContext('2d');
+function getEl<T extends HTMLElement>(id: string): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing element #${id}`);
+  return el as T;
+}
 
-const sizeInput = document.getElementById('size');
-const fontsizeInput = document.getElementById('fontsize');
-const primaryColor = document.getElementById('color-primary');
-const secondaryColor = document.getElementById('color-secondary');
+const canvas = getEl<HTMLCanvasElement>('canvas');
+const overlay = getEl<HTMLCanvasElement>('overlay');
+const ctx = canvas.getContext('2d')!;
+const octx = overlay.getContext('2d')!;
+
+const sizeInput = getEl<HTMLInputElement>('size');
+const fontsizeInput = getEl<HTMLInputElement>('fontsize');
+const primaryColor = getEl<HTMLInputElement>('color-primary');
+const secondaryColor = getEl<HTMLInputElement>('color-secondary');
+
+export type RgbaColor = [number, number, number, number];
 
 // ---------- helpers ----------
-export function getPos(e) {
+export function getPos(e: MouseEvent): { x: number; y: number } {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
@@ -21,15 +30,15 @@ export function getPos(e) {
   };
 }
 
-export function clearOverlay() {
+export function clearOverlay(): void {
   octx.clearRect(0, 0, overlay.width, overlay.height);
 }
 
-export function strokeStyleFor(button) {
+export function strokeStyleFor(button: number): string {
   return button === 2 ? secondaryColor.value : primaryColor.value;
 }
 
-export function setupStroke(targetCtx, button) {
+export function setupStroke(targetCtx: CanvasRenderingContext2D, button: number): void {
   targetCtx.strokeStyle = strokeStyleFor(button);
   targetCtx.fillStyle = strokeStyleFor(button);
   targetCtx.lineWidth = Number(sizeInput.value);
@@ -38,14 +47,14 @@ export function setupStroke(targetCtx, button) {
 }
 
 // ---------- eyedropper ----------
-export function pickColor(x, y, button) {
+export function pickColor(x: number, y: number, button: number): void {
   const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
   const hex = '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
   if (button === 2) secondaryColor.value = hex; else primaryColor.value = hex;
 }
 
 // ---------- flood fill ----------
-export function hexToRgba(hex) {
+export function hexToRgba(hex: string): RgbaColor {
   const v = hex.replace('#', '');
   const r = parseInt(v.substring(0, 2), 16);
   const g = parseInt(v.substring(2, 4), 16);
@@ -53,26 +62,28 @@ export function hexToRgba(hex) {
   return [r, g, b, 255];
 }
 
-export function floodFill(x, y, fillColor) {
+export function floodFill(x: number, y: number, fillColor: RgbaColor): void {
   const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = img.data;
   const w = canvas.width, h = canvas.height;
-  const idx = (px, py) => (py * w + px) * 4;
+  const idx = (px: number, py: number) => (py * w + px) * 4;
   const startIdx = idx(x, y);
   const target = [data[startIdx], data[startIdx + 1], data[startIdx + 2], data[startIdx + 3]];
   const [fr, fg, fb, fa] = fillColor;
 
   if (target[0] === fr && target[1] === fg && target[2] === fb && target[3] === fa) return;
 
-  const matches = (i) => (
+  const matches = (i: number) => (
     data[i] === target[0] && data[i + 1] === target[1] &&
     data[i + 2] === target[2] && data[i + 3] === target[3]
   );
 
-  const stack = [[x, y]];
+  const stack: [number, number][] = [[x, y]];
   while (stack.length) {
-    let [cx, cy] = stack.pop();
-    let i = idx(cx, cy);
+    const next = stack.pop();
+    if (!next) break;
+    const [cx, cy] = next;
+    const i = idx(cx, cy);
     if (cx < 0 || cx >= w || cy < 0 || cy >= h || !matches(i)) continue;
 
     // scan left/right on this row, filling as we go
@@ -90,7 +101,11 @@ export function floodFill(x, y, fillColor) {
 }
 
 // ---------- shape preview ----------
-export function drawShape(targetCtx, tool, x0, y0, x1, y1) {
+export function drawShape(
+  targetCtx: CanvasRenderingContext2D,
+  tool: Tool,
+  x0: number, y0: number, x1: number, y1: number
+): void {
   targetCtx.beginPath();
   switch (tool) {
     case 'line':
@@ -116,7 +131,7 @@ export function drawShape(targetCtx, tool, x0, y0, x1, y1) {
 }
 
 // ---------- text tool ----------
-export function placeText(x, y) {
+export function placeText(x: number, y: number): void {
   const value = prompt('Enter text:');
   if (!value) return;
   pushHistory();
