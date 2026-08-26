@@ -15,6 +15,9 @@
     "@eslint/js": "^10.0.1",
     "@eslint/json": "^2.0.1",
     "@eslint/markdown": "^8.0.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^10.9.0",
     "globals": "^17.11.0",
     "typescript": "^7.0.2",
@@ -22,5 +25,10 @@
   },
   "allowScripts": {
     "esbuild@0.28.2": true
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zustand": "^5.0.15"
   }
 }

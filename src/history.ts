@@ -1,20 +1,18 @@
+import { useAppStore } from './store';
+
 function getEl<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
   if (!el) throw new Error(`Missing element #${id}`);
   return el as T;
 }
 
-const canvas = getEl<HTMLCanvasElement>('canvas');
-const overlay = getEl<HTMLCanvasElement>('overlay');
-const ctx = canvas.getContext('2d')!;
-
-const statusSize = getEl<HTMLElement>('status-size');
-const resizePreview = getEl<HTMLElement>('resize-preview');
-const handleE = getEl<HTMLElement>('handle-e');
-const handleS = getEl<HTMLElement>('handle-s');
-const handleSE = getEl<HTMLElement>('handle-se');
-const canvasWInput = getEl<HTMLInputElement>('canvas-w');
-const canvasHInput = getEl<HTMLInputElement>('canvas-h');
+let canvas: HTMLCanvasElement;
+let overlay: HTMLCanvasElement;
+let ctx: CanvasRenderingContext2D;
+let resizePreview: HTMLElement;
+let handleE: HTMLElement;
+let handleS: HTMLElement;
+let handleSE: HTMLElement;
 
 const MIN_CANVAS_SIZE = 10;
 const MAX_CANVAS_SIZE = 4000;
@@ -67,15 +65,6 @@ export function redo(): void {
   restore(entry);
 }
 
-getEl<HTMLButtonElement>('btn-undo').addEventListener('click', undo);
-getEl<HTMLButtonElement>('btn-redo').addEventListener('click', redo);
-
-window.addEventListener('keydown', (e) => {
-  const ctrl = e.ctrlKey || e.metaKey;
-  if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-  else if (ctrl && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); }
-});
-
 // ---------- canvas init ----------
 export function fillWhite(): void {
   ctx.fillStyle = '#ffffff';
@@ -83,9 +72,7 @@ export function fillWhite(): void {
 }
 
 function updateSizeUI(): void {
-  statusSize.textContent = `${canvas.width} × ${canvas.height}`;
-  canvasWInput.value = String(canvas.width);
-  canvasHInput.value = String(canvas.height);
+  useAppStore.getState().setCanvasSize(canvas.width, canvas.height);
   positionHandles();
 }
 
@@ -103,9 +90,6 @@ function positionHandles(): void {
   handleSE.style.top = `${CANVAS_OFFSET + h}px`;
 }
 
-fillWhite();
-updateSizeUI();
-
 // ---------- resizing ----------
 function resizeCanvases(w: number, h: number): void {
   canvas.width = w;
@@ -118,7 +102,7 @@ function clampSize(v: number): number {
   return Math.max(MIN_CANVAS_SIZE, Math.min(MAX_CANVAS_SIZE, Math.round(v)));
 }
 
-function performResize(newW: number, newH: number): void {
+export function performResize(newW: number, newH: number): void {
   newW = clampSize(newW);
   newH = clampSize(newH);
   if (newW === canvas.width && newH === canvas.height) return;
@@ -159,24 +143,45 @@ function onResizeDragEnd(e: MouseEvent): void {
   performResize(w, h);
 }
 
-[handleE, handleS, handleSE].forEach((handle) => {
-  handle.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    resizeDir = handle.dataset.dir as ResizeDir;
-    dragStartClientX = e.clientX;
-    dragStartClientY = e.clientY;
-    dragStartW = canvas.width;
-    dragStartH = canvas.height;
-    resizePreview.style.left = `${CANVAS_OFFSET}px`;
-    resizePreview.style.top = `${CANVAS_OFFSET}px`;
-    resizePreview.style.width = `${dragStartW}px`;
-    resizePreview.style.height = `${dragStartH}px`;
-    resizePreview.style.display = 'block';
-    document.addEventListener('mousemove', onResizeDragMove);
-    document.addEventListener('mouseup', onResizeDragEnd);
-  });
-});
+// ---------- init (called once the DOM exists, i.e. after React mounts) ----------
+let initialized = false;
 
-getEl<HTMLButtonElement>('btn-resize').addEventListener('click', () => {
-  performResize(Number(canvasWInput.value), Number(canvasHInput.value));
-});
+export function initHistory(): void {
+  if (initialized) return;
+  initialized = true;
+
+  canvas = getEl<HTMLCanvasElement>('canvas');
+  overlay = getEl<HTMLCanvasElement>('overlay');
+  ctx = canvas.getContext('2d')!;
+  resizePreview = getEl<HTMLElement>('resize-preview');
+  handleE = getEl<HTMLElement>('handle-e');
+  handleS = getEl<HTMLElement>('handle-s');
+  handleSE = getEl<HTMLElement>('handle-se');
+
+  fillWhite();
+  updateSizeUI();
+
+  [handleE, handleS, handleSE].forEach((handle) => {
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      resizeDir = handle.dataset.dir as ResizeDir;
+      dragStartClientX = e.clientX;
+      dragStartClientY = e.clientY;
+      dragStartW = canvas.width;
+      dragStartH = canvas.height;
+      resizePreview.style.left = `${CANVAS_OFFSET}px`;
+      resizePreview.style.top = `${CANVAS_OFFSET}px`;
+      resizePreview.style.width = `${dragStartW}px`;
+      resizePreview.style.height = `${dragStartH}px`;
+      resizePreview.style.display = 'block';
+      document.addEventListener('mousemove', onResizeDragMove);
+      document.addEventListener('mouseup', onResizeDragEnd);
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if (ctrl && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); }
+  });
+}

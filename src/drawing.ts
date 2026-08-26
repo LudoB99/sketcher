@@ -1,4 +1,5 @@
 import { pushHistory } from './history.js';
+import { useAppStore } from './store.js';
 import type { Tool } from './types.js';
 
 function getEl<T extends HTMLElement>(id: string): T {
@@ -7,15 +8,20 @@ function getEl<T extends HTMLElement>(id: string): T {
   return el as T;
 }
 
-const canvas = getEl<HTMLCanvasElement>('canvas');
-const overlay = getEl<HTMLCanvasElement>('overlay');
-const ctx = canvas.getContext('2d')!;
-const octx = overlay.getContext('2d')!;
+let canvas: HTMLCanvasElement;
+let overlay: HTMLCanvasElement;
+let ctx: CanvasRenderingContext2D;
+let octx: CanvasRenderingContext2D;
 
-const sizeInput = getEl<HTMLInputElement>('size');
-const fontsizeInput = getEl<HTMLInputElement>('fontsize');
-const primaryColor = getEl<HTMLInputElement>('color-primary');
-const secondaryColor = getEl<HTMLInputElement>('color-secondary');
+let initialized = false;
+export function initDrawing(): void {
+  if (initialized) return;
+  initialized = true;
+  canvas = getEl<HTMLCanvasElement>('canvas');
+  overlay = getEl<HTMLCanvasElement>('overlay');
+  ctx = canvas.getContext('2d')!;
+  octx = overlay.getContext('2d')!;
+}
 
 export type RgbaColor = [number, number, number, number];
 
@@ -35,13 +41,14 @@ export function clearOverlay(): void {
 }
 
 export function strokeStyleFor(button: number): string {
-  return button === 2 ? secondaryColor.value : primaryColor.value;
+  const { primaryColor, secondaryColor } = useAppStore.getState();
+  return button === 2 ? secondaryColor : primaryColor;
 }
 
 export function setupStroke(targetCtx: CanvasRenderingContext2D, button: number): void {
   targetCtx.strokeStyle = strokeStyleFor(button);
   targetCtx.fillStyle = strokeStyleFor(button);
-  targetCtx.lineWidth = Number(sizeInput.value);
+  targetCtx.lineWidth = useAppStore.getState().size;
   targetCtx.lineCap = 'round';
   targetCtx.lineJoin = 'round';
 }
@@ -50,7 +57,8 @@ export function setupStroke(targetCtx: CanvasRenderingContext2D, button: number)
 export function pickColor(x: number, y: number, button: number): void {
   const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
   const hex = '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
-  if (button === 2) secondaryColor.value = hex; else primaryColor.value = hex;
+  const { setPrimaryColor, setSecondaryColor } = useAppStore.getState();
+  if (button === 2) setSecondaryColor(hex); else setPrimaryColor(hex);
 }
 
 // ---------- flood fill ----------
@@ -135,8 +143,8 @@ export function placeText(x: number, y: number): void {
   const value = prompt('Enter text:');
   if (!value) return;
   pushHistory();
-  ctx.fillStyle = primaryColor.value;
-  ctx.font = `${fontsizeInput.value}px "Segoe UI", Arial, sans-serif`;
+  ctx.fillStyle = useAppStore.getState().primaryColor;
+  ctx.font = `${useAppStore.getState().fontSize}px "Segoe UI", Arial, sans-serif`;
   ctx.textBaseline = 'top';
   ctx.fillText(value, x, y);
 }
