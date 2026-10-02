@@ -1,10 +1,27 @@
 * { box-sizing: border-box; }
 
+:root {
+  --bg: #0d0d0f;
+  --panel: #18181b;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --surface: #222226;
+  --surface-hover: #2b2b30;
+  --surface-active: #35353c;
+  --text: #ededef;
+  --text-dim: #96969e;
+  --accent: #6d5efc;
+  --accent-hover: #8577ff;
+  --accent-soft: rgba(109, 94, 252, 0.18);
+  --radius-sm: 7px;
+  --radius-md: 12px;
+}
+
 html, body {
   margin: 0;
   height: 100%;
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-  background: #808080;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
   overflow: hidden;
 }
 
@@ -18,46 +35,66 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(#3a6ea5, #1c4e80);
-  color: #fff;
-  padding: 6px 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+  padding: 10px 16px;
   flex: 0 0 auto;
 }
 
 #app-title {
+  display: flex;
+  align-items: center;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
+}
+
+#app-title::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
 }
 
 #file-actions button {
-  margin-left: 6px;
+  margin-left: 8px;
 }
 
 button {
   font: inherit;
   cursor: pointer;
-  background: #e8e8e8;
-  border: 1px solid #999;
-  border-radius: 3px;
-  padding: 5px 9px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 button:hover {
-  background: #d8ecff;
-  border-color: #5b9bd5;
+  background: var(--surface-hover);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 button:active {
-  background: #bcdcff;
+  background: var(--surface-active);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 #toolbar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: #ececec;
-  border-bottom: 1px solid #bbb;
-  padding: 6px 10px;
+  gap: 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+  padding: 8px 16px;
   flex: 0 0 auto;
   flex-wrap: wrap;
 }
@@ -65,17 +102,17 @@ button:active {
 .tool-group {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-right: 12px;
-  border-right: 1px solid #ccc;
+  gap: 5px;
+  padding-right: 14px;
+  border-right: 1px solid var(--panel-border);
 }
 
 .tool-group:last-child { border-right: none; }
 
 .tool-btn {
   font-size: 16px;
-  width: 34px;
-  height: 30px;
+  width: 36px;
+  height: 32px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -83,29 +120,32 @@ button:active {
 }
 
 .tool-btn.active {
-  background: #a9d3ff;
-  border-color: #3a6ea5;
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
 }
 
 .opt {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
-  color: #333;
+  color: var(--text-dim);
 }
 
 .opt input[type="range"] {
   width: 90px;
+  /* eslint-disable-next-line css/use-baseline -- accent-color has shipped in all evergreen browsers since 2022; the baseline dataset just hasn't promoted it */
+  accent-color: var(--accent);
 }
 
 #colorbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: #ececec;
-  border-bottom: 1px solid #bbb;
-  padding: 6px 10px;
+  gap: 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--panel-border);
+  padding: 10px 16px;
   flex: 0 0 auto;
 }
 
@@ -113,24 +153,26 @@ button:active {
   display: grid;
   grid-template-columns: repeat(14, 20px);
   grid-auto-rows: 20px;
-  gap: 3px;
+  gap: 4px;
 }
 
 .swatch {
   width: 20px;
   height: 20px;
-  border: 1px solid #888;
-  border-radius: 2px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
   cursor: pointer;
+  transition: outline-color 0.1s ease;
 }
 
 .swatch:hover {
-  outline: 2px solid #3a6ea5;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 #active-colors {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .color-slot {
@@ -138,17 +180,18 @@ button:active {
   flex-direction: column;
   align-items: center;
   font-size: 10px;
-  color: #333;
-  gap: 2px;
+  color: var(--text-dim);
+  gap: 4px;
 }
 
 .color-slot input[type="color"] {
   width: 40px;
   height: 26px;
-  border: 1px solid #888;
-  border-radius: 3px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
   padding: 0;
   cursor: pointer;
+  background: var(--surface);
 }
 
 #canvas-wrap {
@@ -157,9 +200,24 @@ button:active {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  background: #808080;
+  background:
+    radial-gradient(circle at 50% 0%, #1a1a1e, var(--bg) 70%);
   padding: 20px;
   position: relative;
+}
+
+#canvas-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+#canvas-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#canvas-wrap::-webkit-scrollbar-thumb {
+  background: var(--surface-hover);
+  border-radius: 10px;
 }
 
 #canvas, #overlay {
@@ -170,14 +228,14 @@ button:active {
 }
 
 #canvas {
-  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
   background: #fff;
 }
 
 #resize-preview {
   position: absolute;
-  border: 2px dashed #3a6ea5;
-  background: rgba(58, 110, 165, 0.08);
+  border: 2px dashed var(--accent);
+  background: var(--accent-soft);
   pointer-events: none;
   display: none;
   z-index: 5;
@@ -185,12 +243,13 @@ button:active {
 
 .resize-handle {
   position: absolute;
-  background: rgba(58, 110, 165, 0.55);
+  background: rgba(109, 94, 252, 0.45);
   z-index: 10;
+  transition: background-color 0.15s ease;
 }
 
 .resize-handle:hover {
-  background: #3a6ea5;
+  background: var(--accent);
 }
 
 #handle-e {
@@ -210,22 +269,27 @@ button:active {
   height: 14px;
   margin-left: -7px;
   margin-top: -7px;
-  border-radius: 2px;
+  border-radius: 3px;
   cursor: nwse-resize;
-  background: #3a6ea5;
+  background: var(--accent);
 }
 
 #canvas-size-group input[type="number"] {
   width: 64px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
 }
 
 #statusbar {
   flex: 0 0 auto;
   display: flex;
-  gap: 20px;
-  background: #ececec;
-  border-top: 1px solid #bbb;
-  padding: 4px 12px;
+  gap: 24px;
+  background: var(--panel);
+  border-top: 1px solid var(--panel-border);
+  padding: 6px 16px;
   font-size: 12px;
-  color: #444;
+  color: var(--text-dim);
 }
