@@ -25,12 +25,14 @@ export function CanvasArea() {
 
   return (
     <div id="canvas-wrap">
-      <canvas id="canvas" width={1000} height={650} />
-      <canvas id="overlay" width={1000} height={650} />
-      <div id="resize-preview" />
-      <div className="resize-handle" id="handle-e" data-dir="e" title="Drag to resize width" />
-      <div className="resize-handle" id="handle-s" data-dir="s" title="Drag to resize height" />
-      <div className="resize-handle" id="handle-se" data-dir="se" title="Drag to resize" />
+      <div id="canvas-stage">
+        <canvas id="canvas" width={1000} height={650} />
+        <canvas id="overlay" width={1000} height={650} />
+        <div id="resize-preview" />
+        <div className="resize-handle" id="handle-e" data-dir="e" title="Drag to resize width" />
+        <div className="resize-handle" id="handle-s" data-dir="s" title="Drag to resize height" />
+        <div className="resize-handle" id="handle-se" data-dir="se" title="Drag to resize" />
+      </div>
     </div>
   );
 }

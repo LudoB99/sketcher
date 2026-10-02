@@ -16,7 +16,6 @@ let handleSE: HTMLElement;
 
 const MIN_CANVAS_SIZE = 10;
 const MAX_CANVAS_SIZE = 4000;
-const CANVAS_OFFSET = 20; // matches #canvas/#overlay top/left in style.css
 
 // ---------- history (undo/redo) ----------
 interface HistoryEntry {
@@ -78,16 +77,16 @@ function updateSizeUI(): void {
 
 function positionHandles(): void {
   const w = canvas.width, h = canvas.height;
-  handleE.style.left = `${CANVAS_OFFSET + w}px`;
-  handleE.style.top = `${CANVAS_OFFSET}px`;
+  handleE.style.left = `${w}px`;
+  handleE.style.top = '0px';
   handleE.style.height = `${h}px`;
 
-  handleS.style.left = `${CANVAS_OFFSET}px`;
-  handleS.style.top = `${CANVAS_OFFSET + h}px`;
+  handleS.style.left = '0px';
+  handleS.style.top = `${h}px`;
   handleS.style.width = `${w}px`;
 
-  handleSE.style.left = `${CANVAS_OFFSET + w}px`;
-  handleSE.style.top = `${CANVAS_OFFSET + h}px`;
+  handleSE.style.left = `${w}px`;
+  handleSE.style.top = `${h}px`;
 }
 
 // ---------- resizing ----------
@@ -169,8 +168,8 @@ export function initHistory(): void {
       dragStartClientY = e.clientY;
       dragStartW = canvas.width;
       dragStartH = canvas.height;
-      resizePreview.style.left = `${CANVAS_OFFSET}px`;
-      resizePreview.style.top = `${CANVAS_OFFSET}px`;
+      resizePreview.style.left = '0px';
+      resizePreview.style.top = '0px';
       resizePreview.style.width = `${dragStartW}px`;
       resizePreview.style.height = `${dragStartH}px`;
       resizePreview.style.display = 'block';
