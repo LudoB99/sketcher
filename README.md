@@ -1,5 +1,7 @@
 # Sketcher
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/d821931b-6b3f-468f-88b7-510b37c517ee/deploy-status)](https://app.netlify.com/projects/rainbow-banoffee-5b69f6/deploys)
+
 A web-based Paint clone: pencil, brush, eraser, fill bucket, eyedropper, shapes (line/rectangle/ellipse, outlined or filled), text, undo/redo, a resizable canvas, and PNG export. Built with TypeScript, Vite, React, and Zustand.
 
 **This project is way over-engineered for what it is.** It's a Paint clone. It does not need a Vite dev server, TypeScript, a state management library, or a whole frontend framework wrapped around a `<canvas>` element. It has all of these anyway, purely for fun and because it made a good excuse to set them up. The production bundle grew from 8.8 KB to 206 KB the day React showed up. Don't take the tooling as a sign this is serious business.
