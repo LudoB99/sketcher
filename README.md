@@ -35,7 +35,7 @@ Then open the URL it prints (defaults to `http://localhost:5173`).
 npm run typecheck
 ```
 
-Runs `tsc --noEmit`. Note: `typescript-eslint` doesn't support TypeScript 7 yet, so `npm run lint` (below) doesn't currently cover the `.ts`/`.tsx` source files. `typecheck` is the real safety net for those until that catches up.
+Runs `tsc --noEmit`.
 
 ## Linting
 
@@ -43,7 +43,7 @@ Runs `tsc --noEmit`. Note: `typescript-eslint` doesn't support TypeScript 7 yet,
 npm run lint
 ```
 
-Covers JSON, Markdown, and CSS (see the caveat above re: `.ts`/`.tsx` files).
+Covers JS, TS/TSX (via `typescript-eslint`, including type-aware rules), JSON, Markdown, and CSS. Note: `typescript` is pinned to the `6.0.x` line rather than `7.x` because `typescript-eslint`'s peer dependency range doesn't allow `7.x` yet ([tracking issue](https://github.com/typescript-eslint/typescript-eslint/issues/10940)). Revisit once that lands.
 
 ## Production build
 
