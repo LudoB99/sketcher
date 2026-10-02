@@ -9,7 +9,7 @@ export const TOOL_LABELS: Record<Tool, string> = {
 
 export const TOOL_ICONS: Record<Tool, string> = {
   pencil: '✏️', brush: '🖌️', eraser: '🧽', fill: '🪣',
-  eyedropper: '💧', line: '╱', rect: '▭', 'rect-fill': '▮',
+  eyedropper: '💧', line: '/', rect: '▭', 'rect-fill': '▮',
   ellipse: '◯', 'ellipse-fill': '⬤', text: '🅰️'
 };
 
